@@ -1,6 +1,6 @@
 let chartInstance = null;
 let allData = {};
-let selectedCurrencies = new Set(["1 Singapore Dollar"]); // 默认 SGD
+let selectedCurrencies = new Set(["1 Singapore Dollar", "1 US Dollar"]); // 默认 SGD
 let selectedMetric = "selling_tt_od";
 
 const metricOptions = {
@@ -233,12 +233,20 @@ function renderToolbar() {
 /* =========================
    币种开关面板
 ========================= */
+let currencyPanelExpanded = false;
+
 function renderCurrencyPanel(currencies) {
   const panel = document.getElementById("currency-panel");
   panel.innerHTML = "";
 
   const theme = detectAutoTheme(); // "light" / "dark"
-  const s = styles[theme];
+
+  const container = document.createElement("div");
+  Object.assign(container.style, {
+    maxHeight: currencyPanelExpanded ? "none" : "150px",
+    overflow: "hidden",
+    transition: "max-height 0.2s ease",
+  });
 
   const wrap = document.createElement("div");
   Object.assign(wrap.style, {
@@ -280,15 +288,10 @@ function renderCurrencyPanel(currencies) {
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = selectedCurrencies.has(cur);
-    cb.style.display = "none"; // 隐藏原始 checkbox
+    cb.style.display = "none";
 
-    // hover 效果
-    label.onmouseenter = () => {
-      label.style.opacity = "0.8";
-    };
-    label.onmouseleave = () => {
-      label.style.opacity = "1";
-    };
+    label.onmouseenter = () => (label.style.opacity = "0.8");
+    label.onmouseleave = () => (label.style.opacity = "1");
 
     cb.onchange = () => {
       if (cb.checked) {
@@ -296,7 +299,7 @@ function renderCurrencyPanel(currencies) {
       } else {
         selectedCurrencies.delete(cur);
       }
-      renderCurrencyPanel(currencies); // 重画按钮状态
+      renderCurrencyPanel(currencies);
       redrawChart();
     };
 
@@ -304,7 +307,28 @@ function renderCurrencyPanel(currencies) {
     wrap.appendChild(label);
   });
 
-  panel.appendChild(wrap);
+  container.appendChild(wrap);
+  panel.appendChild(container);
+
+  // ---- Show more 按钮 ----
+  const btn = document.createElement("button");
+  btn.textContent = currencyPanelExpanded ? "Show less" : "Show more";
+
+  Object.assign(btn.style, {
+    marginTop: "6px",
+    fontSize: "12px",
+    background: "none",
+    border: "none",
+    color: theme === "dark" ? "#8ab4f8" : "#2563eb",
+    cursor: "pointer",
+  });
+
+  btn.onclick = () => {
+    currencyPanelExpanded = !currencyPanelExpanded;
+    renderCurrencyPanel(currencies);
+  };
+
+  panel.appendChild(btn);
 }
 
 /* =========================
